@@ -463,8 +463,8 @@ function SchemaSelector(collName){
     switch (collName) {
         case "RSM":
             return dbmodel.RSMDataObjSchema;
-        case "RSM_FILTERED":
-            return dbmodel.RSMDataObjSchema;
+        case "RSM_Event":
+            return dbmodel.EventRSMDataObjSchema;
         case "type_1":
             return dbmodel.type_1_Schema;
         case "QFv2x_obu":

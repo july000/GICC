@@ -87,6 +87,22 @@ module.exports.RSMDataObjSchema = {
     }
 };
 
+EventRSMDataObj = function(obj) {
+  this.type = obj.type; //obj.type;
+  this.data = obj.data; //obj.data;
+  this.event_id = obj.event_id
+};
+
+module.exports.EventRSMDataObjSchema = {
+    type: { type: String },
+    data: {
+        mecEsn: { type: String}, // ,required: true
+        rsms: {type: Array}, // , required: true
+        timestamp: {type: Number}
+    },
+    event_id: { type: Number}
+};
+
 // module.exports.RSMDataObjSchema = Joi.object({
 //     type: Joi.string().valid('14').required(),
 //     data: Joi.object({

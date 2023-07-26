@@ -83,7 +83,7 @@ client.on('connect', function(connection) {
 
 
 
-var jobInstance = schedule.scheduleJob('*/5 * * * * *', () => {
+var jobInstance = schedule.scheduleJob('*/2 * * * *', () => {
     try{
         console.log('------------------------------------The job is running at ' + new Date());
         var now = new Date();
@@ -100,42 +100,51 @@ var jobInstance = schedule.scheduleJob('*/5 * * * * *', () => {
         // var endTime = '2023-07-25 08:35:00';
         // console.log("------- startTime endTime : " +startTime + "   " +endTime);
 
-        getTrafficEvent(startTime, endTime)
-            .then(data => {
-                // console.log(data);
-                var trafficEventList = JSON.parse(data).rows;
-                console.log("----------------------------- trafficEventList.length : " + trafficEventList.length);
-                for (let i = 0; i < trafficEventList.length; i++){
-                    const event = trafficEventList[i];
-                    var trigger_time = Date.parse(event.trigger_time)
-                    // var end_time = event.end_time
-                    var end_time = event.trigger_time// fix me
-                    
-                    var enevt_id = event.id
-                    var enevt_type = event.type
-                    // console.log("------------------ event id : "+event.id + " " + trigger_time);
+        // getTrafficEvent(startTime, endTime)
+        //     .then(data => {
 
-                    Get('RSM', {"data.timestamp": {$lt: trigger_time }}, 0, function (resCode, resMsg, times, Obj){
-                        // console.log("dddddddddddddd");
-                        return new Promise(function(resolve, reject){
+
+                // console.log(data);
+                // var trafficEventList = JSON.parse(data).rows;
+                // console.log("----------------------------- trafficEventList.length : ");
+            return new Promise(function(resolve, reject){
+                for (let i = 0; i < 5; i++){
+                    // const event = trafficEventList[i];
+                    // var trigger_time = Date.parse(event.trigger_time)
+                    // var end_time = event.end_time
+                    // var end_time = event.trigger_time// fix me
+                    
+                    // var enevt_id = event.id
+                    // var enevt_type = event.type
+                    // console.log("------------------ event id : "+event.id + " " + trigger_time + " i=" + i);
+
+                    Get('RSM', {"data.timestamp": {$gte: 1690335629000, $lte: 1690339571000}}, i, function (resCode, resMsg, times, Obj){
+
+                        console.log("------------------ times: "+i);
+
+                        // return new Promise(function(resolve, reject){
                             if (resCode !== 200) {
                                 console.error("GetOne event RSM file failed ---------------" + resCode + "-----------------");
                                 reject(resCode);
                                 return;
                             }
                             if (Obj) {
-                                console.log("===== size : "+Obj.length);
+                                // console.log("===== size : "+Obj.length);
                                 Obj.forEach(element => {
-                                    console.log("in each file id : "+ element.data.timestamp);
-                                    PutOne('RSM_FILTERED', {"data.timestamp": element.data.timestamp }, element, 0, function (resCode, resMsg, times) {
+                                    // console.log("in each file id : "+ element.data.timestamp);
+                                    element.event_id = 0
+                                    PutOne('RSM_Event', {"data.timestamp": element.data.timestamp }, element, 0, function (resCode, resMsg, times) {
                                         if (resCode !== 200) {
                                             console.debug("post to RSM_FILTERED failed!");
                                             return;
                                         }
-                                        console.log("update to RSM_FILTERED ---------------" + resCode + "-----------------");
+                                        // console.log("update to RSM_FILTERED ---------------" + resCode + "-----------------");
                                         resolve(resCode);
                                     });
                                 });
+                            }
+                            else{
+                                console.log("-=-=-=-=-=-=-==");
                             }
 
                             // else {
@@ -144,14 +153,18 @@ var jobInstance = schedule.scheduleJob('*/5 * * * * *', () => {
                             //         resolve(resCode);
                             //     });
                             // }
-                        })
+                        // })
+
+                        
+                        
+                        
                     })
                 }
-            })   
-            .catch(error => {
-                console.error(error);
-            });
-
+            }).then(function(resCode){
+                console.log("processEvents finished with code " + resCode);
+            }).catch(function(err) {
+                console.error("processEvents failed with error " + err);
+            })
     } catch(err) {
         console.error(err);
     }
@@ -174,7 +187,7 @@ var options = {
 
 var expressAppConfig = oas3Tools.expressAppConfig(path.join(__dirname, 'api/openapi.yaml'), options);
 var app = expressAppConfig.getApp();
-client.connect('ws://36.138.2.41:9873/api/websocket/connectServer/sim-gicc'); //, 'echo-protocol');
+// client.connect('ws://36.138.2.41:9873/api/websocket/connectServer/sim-gicc'); //, 'echo-protocol');
 
 // Initialize the Swagger middleware
 // http.createServer(app).listen(serverPort, function () {
