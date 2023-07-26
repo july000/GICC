@@ -1,0 +1,83 @@
+openapi: 3.0.3
+info:
+  title: 广东智能网联
+  description: This is a GICC Server based on the OpenAPI 3.0 specification
+  version: 1.0.11
+servers:
+- url: http://localhost/api/
+paths:
+  /generateSceneData:
+    post:
+      summary: generate csv files
+      operationId: generateSceneData
+      requestBody:
+        $ref: '#/components/requestBodies/scene'
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response'
+        "400":
+          description: Invalid status value
+      x-swagger-router-controller: GenerateSceneData
+components:
+  schemas:
+    event:
+      required:
+      - endTime
+      - startTime
+      type: object
+      properties:
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        eventlists:
+          type: array
+          items:
+            $ref: '#/components/schemas/event_eventlists'
+    response:
+      type: array
+      items:
+        $ref: '#/components/schemas/response_inner'
+    event_eventlists:
+      type: object
+      properties:
+        sceneType:
+          type: integer
+        type:
+          type: integer
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        longitude:
+          type: integer
+        latitude:
+          type: integer
+        vlicense:
+          type: string
+        vid:
+          type: string
+    response_inner:
+      type: object
+      properties:
+        evnetID:
+          type: integer
+        csvUrl:
+          type: string
+      example:
+        csvUrl: csvUrl
+        evnetID: 0
+  requestBodies:
+    scene:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/event'

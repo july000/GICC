@@ -1,0 +1,26 @@
+{
+  "name": "",
+  "version": "1.0.11",
+  "description": "This is a GICC Server based on the OpenAPI 3.0 specification",
+  "main": "index.js",
+  "scripts": {
+    "prestart": "npm install",
+    "start": "node index.js"
+  },
+  "keywords": [
+    "swagger"
+  ],
+  "license": "Unlicense",
+  "private": true,
+  "dependencies": {
+    "connect": "^3.2.0",
+    "generic-promise-pool": "^1.2.2",
+    "joi": "^17.9.2",
+    "js-yaml": "^3.3.0",
+    "mongoose": "^7.3.4",
+    "node-schedule": "^2.1.1",
+    "oas3-tools": "^2.2.3",
+    "request": "^2.88.2",
+    "websocket": "^1.0.34"
+  }
+}
