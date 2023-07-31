@@ -4,12 +4,12 @@ info:
   description: This is a GICC Server based on the OpenAPI 3.0 specification
   version: 1.0.11
 servers:
-- url: http://localhost/api/
+- url: http://localhost:8080
 paths:
   /generateSceneData:
     post:
       summary: generate csv files
-      operationId: generateSceneData
+      operationId: generateCSV
       requestBody:
         $ref: '#/components/requestBodies/scene'
       responses:
@@ -21,7 +21,7 @@ paths:
                 $ref: '#/components/schemas/response'
         "400":
           description: Invalid status value
-      x-swagger-router-controller: GenerateSceneData
+      x-swagger-router-controller: Default
 components:
   schemas:
     event:

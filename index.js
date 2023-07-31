@@ -164,6 +164,67 @@ function getData() {
 };
 
 
+function getEventData() {
+    const query = { "data.timestamp": { $gte: 1690335629000, $lte: 1690339571000 } };
+    const promises = [];
+  
+    for (let i = 0; i < 5; i++) {
+      promises.push(new Promise((resolve, reject) => {
+        Get('RSM', query, i, function (resCode, resMsg, times, Obj) {
+          if (resCode !== 200) {
+            console.error("GetOne event RSM file failed ---------------" + resCode + "-----------------");
+            reject(resCode);
+            return;
+          }
+  
+          if (Obj) {
+            console.log(`===== size : ${Obj.length}`);
+            resolve(Obj);
+          }
+        });
+      }));
+    }
+  
+    return Promise.all(promises);
+  }
+  
+
+  function insertEventData(events) {
+    const promises = [];
+  
+    events.forEach(event => {
+      event.event_id = 0;
+      promises.push(new Promise((resolve, reject) => {
+        PutOne('RSM_Event', { "data.timestamp": event.data.timestamp }, event, 0, function (resCode, resMsg, times) {
+          if (resCode !== 200) {
+            console.debug("post to RSM_FILTERED failed!");
+            reject(resCode);
+            return;
+          }
+  
+          resolve(resCode);
+        });
+      }));
+    });
+  
+    return Promise.all(promises);
+  }
+  
+  // 获取事件数据并插入到 RSM_Event 集合中
+  async function processData() {
+    try {
+      const events = await getEventData();
+      console.log(`Retrieved ${events.length} events`);
+      const results = await insertEventData(events);
+      console.log(`Inserted ${results.length} events`);
+    } catch (error) {
+      console.error(`Error processing data: ${error}`);
+    }
+  }
+  
+
+ 
+
 
 
 
@@ -193,12 +254,12 @@ var app = expressAppConfig.getApp();
 // client.connect('ws://36.138.2.41:9873/api/websocket/connectServer/sim-gicc'); //, 'echo-protocol');
 
 // Initialize the Swagger middleware
-// http.createServer(app).listen(serverPort, function () {
-//     console.log('Your server is listening on port %d (http://localhost:%d)', serverPort, serverPort);
-//     console.log('Swagger-ui is available on http://localhost:%d/docs', serverPort);
-    
-//     // 下面不能加'echo-protocol'，否则会报Can`t connect due to "Sec-WebSocket-Protocol header"的错。因为服务器没有返回对应协议规定的信息
+http.createServer(app).listen(serverPort, function () {
+    console.log('Your server is listening on port %d (http://localhost:%d)', serverPort, serverPort);
+    console.log('Swagger-ui is available on http://localhost:%d/docs', serverPort);
+    require("./controllers/Default.js").generateSceneData();
+    // 下面不能加'echo-protocol'，否则会报Can`t connect due to "Sec-WebSocket-Protocol header"的错。因为服务器没有返回对应协议规定的信息
 
     
-// });
+});
 

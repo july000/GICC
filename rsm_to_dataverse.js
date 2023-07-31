@@ -17,7 +17,7 @@ const STYLE_MAP = {"car":"vehicle", "mixed_truck":"vehicle", "truck":"vehicle", 
                 };
 const COLOR_MAP = {0:'white',1:'gray',3:'yellow',4:'pink',5:'purple',6:'green',7:'blue',8:'red',9:'brown',10:'orange',11:'black'};
 
-function convert_files(files, output_file) {
+module.exports.convert_files = function convert_files(files, output_file) {
     if (files === null) {
         return;
     }

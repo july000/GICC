@@ -7,7 +7,7 @@
  * body Event  (optional)
  * returns response
  **/
-exports.generateSceneData = function(body) {
+exports.generateCSV = function(body) {
   return new Promise(function(resolve, reject) {
     var examples = {};
     examples['application/json'] = [ {
