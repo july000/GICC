@@ -20,11 +20,6 @@ client = pymongo.MongoClient('mongodb://localhost:27017/')
 db = client['GICC']
 collection = db['RSM_Event']
 
-# Find documents in the collection
-query = {'data.timestamp': {'$gte': 1690335629000, '$lte': 1690339571000}}
-documents = collection.find(query)
-
-
 COLUMN_NAME = ['ID','Time','PositionX','PositionY','PositionZ','Length','Width','Height','Yaw','Pitch','Roll',
                 'VX','VY','VZ','AX','AY','AZ','Category','Style','Color','Ego']
 CATEGORY_MAP = {0:'unkown', 1:'motor', 2:'non-motor', 3:'pedestrian', 4:'rsu'}
@@ -36,8 +31,10 @@ STYLE_MAP = {"car":"vehicle", "mixed_truck":"vehicle", "truck":"vehicle", "coach
                 }
 COLOR_MAP = {0:'white',1:'gray',3:'yellow',4:'pink',5:'purple',6:'green',7:'blue',8:'red',9:'brown',10:'orange',11:'black'}
 
-def run(input_list, output_file):
-    # file_paths = list(Path(input_dir).glob('*.json'))
+def run(start_time, end_time, output_file):
+    print("start_time, end_time : ", type(start_time), end_time)
+    query = {'data.timestamp': {'$gte': int(start_time), '$lte': int(end_time)}}
+    documents = collection.find(query)
     data_frames = (pd.json_normalize(
                     document,
                     record_path=['data', 'rsms', 'participants'],
@@ -87,16 +84,17 @@ def run(input_list, output_file):
     
     df_sub = df[COLUMN_NAME]
     df_sub.to_csv(output_file, index=False)
-    
+    print("generated csv file!!!!")
     # df.to_csv(output_file.split('.csv')[0]+"_all.csv", index=False)
 
-# if __name__ == '__main__':
-#     import argparse
-#     parser = argparse.ArgumentParser()
-#     parser.add_argument('--input-dir', dest='input_dir')
-#     parser.add_argument('--output-file', dest='output_file', default='F:\\renjunmei007\\05_code\\github\\gicc-rawdata-dump\\output\\202306291800\\rsm.csv')
-#     args = parser.parse_args()
-#     run(args.input_dir, args.output_file)
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--start-time', dest='start_time')
+    parser.add_argument('--end-time', dest='end_time')
+    parser.add_argument('--output-file', dest='output_file', default='F:\\renjunmei007\\05_code\\github\\gicc-rawdata-dump\\output\\202306291800\\rsm.csv')
+    args = parser.parse_args()
+    run(args.start_time, args.end_time, args.output_file)
 
 # if __name__ == '__main__':
 #     import sys
@@ -112,4 +110,4 @@ def run(input_list, output_file):
 #         sys.exit(1)
 
 
-run(documents, './output.csv')
+# run(documents, './output.csv')
