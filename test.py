@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import math
 from gps_encoding import wgs84_to_gcj02
+import pymongo
 
 def load_json(input_file):
     with open(input_file) as f:
@@ -14,6 +15,14 @@ def load_json(input_file):
 def load_json_wrapper(file_path):
     return load_json(str(file_path))
 
+# Connect to MongoDB
+client = pymongo.MongoClient('mongodb://localhost:27017/')
+db = client['GICC']
+collection = db['RSM_Event']
+
+# Find documents in the collection
+query = {'data.timestamp': {'$gte': 1690335629000, '$lte': 1690339571000}}
+documents = collection.find(query)
 
 
 COLUMN_NAME = ['ID','Time','PositionX','PositionY','PositionZ','Length','Width','Height','Yaw','Pitch','Roll',
@@ -27,14 +36,13 @@ STYLE_MAP = {"car":"vehicle", "mixed_truck":"vehicle", "truck":"vehicle", "coach
                 }
 COLOR_MAP = {0:'white',1:'gray',3:'yellow',4:'pink',5:'purple',6:'green',7:'blue',8:'red',9:'brown',10:'orange',11:'black'}
 
-def run(input_dir, output_file):
-    file_paths = list(Path(input_dir).glob('*.json'))
-
+def run(input_list, output_file):
+    # file_paths = list(Path(input_dir).glob('*.json'))
     data_frames = (pd.json_normalize(
-                    load_json_wrapper(file_path),
+                    document,
                     record_path=['data', 'rsms', 'participants'],
                     meta=[['data', 'timestamp'], ['data', 'rsms', 'refPos', 'lon'], ['data', 'rsms', 'refPos', 'lat']]
-                ) for file_path in file_paths)
+                ) for document in documents)
 
     df = pd.concat(data_frames, ignore_index=True)
     df.sort_values(by=['data.timestamp'], inplace=True)
@@ -82,11 +90,26 @@ def run(input_dir, output_file):
     
     # df.to_csv(output_file.split('.csv')[0]+"_all.csv", index=False)
 
-if __name__ == '__main__':
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--input-dir', dest='input_dir', default='F:\\renjunmei007\\05_code\\github\\gicc-rawdata-dump\\dump\\202306291800')
-    parser.add_argument('--output-file', dest='output_file', default='F:\\renjunmei007\\05_code\\github\\gicc-rawdata-dump\\output\\202306291800\\rsm.csv')
-    args = parser.parse_args()
+# if __name__ == '__main__':
+#     import argparse
+#     parser = argparse.ArgumentParser()
+#     parser.add_argument('--input-dir', dest='input_dir')
+#     parser.add_argument('--output-file', dest='output_file', default='F:\\renjunmei007\\05_code\\github\\gicc-rawdata-dump\\output\\202306291800\\rsm.csv')
+#     args = parser.parse_args()
+#     run(args.input_dir, args.output_file)
 
-    run(args.input_dir, args.output_file)
+# if __name__ == '__main__':
+#     import sys
+#     function_name = sys.argv[1]
+#     arg1 = sys.argv[2]
+#     arg2 = sys.argv[3]
+
+#     print("============", function_name, arg2)
+#     if function_name == 'run':
+#         run(arg1, arg2)
+#     else:
+#         print(f'Error: Unknown function name "{function_name}"')
+#         sys.exit(1)
+
+
+run(documents, './output.csv')

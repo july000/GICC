@@ -164,7 +164,7 @@ function getData() {
 };
 
 
-function getEventData() {
+module.exports.getEventData = function getEventData() {
     const query = { "data.timestamp": { $gte: 1690335629000, $lte: 1690339571000 } };
     const promises = [];
   
@@ -257,7 +257,7 @@ var app = expressAppConfig.getApp();
 http.createServer(app).listen(serverPort, function () {
     console.log('Your server is listening on port %d (http://localhost:%d)', serverPort, serverPort);
     console.log('Swagger-ui is available on http://localhost:%d/docs', serverPort);
-    require("./controllers/Default.js").generateSceneData();
+    require("./controllers/Default.js").generateCSV();
     // 下面不能加'echo-protocol'，否则会报Can`t connect due to "Sec-WebSocket-Protocol header"的错。因为服务器没有返回对应协议规定的信息
 
     
