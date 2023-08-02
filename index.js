@@ -104,6 +104,7 @@ var jobInstance = schedule.scheduleJob('*/2 * * * *', () => {
                 getData()
                     .then(function(results) {
                     console.log('操作完成，结果为：', results);
+
                     })
                     .catch(function(error) {
                     console.log('操作失败，错误信息为：', error);
@@ -120,8 +121,8 @@ var jobInstance = schedule.scheduleJob('*/2 * * * *', () => {
 
 
 function getData() {
-    var promises = [];
-    for (let i = 0; i < 5; i++){
+  var promises = [];
+  for (let i = 0; i < 5; i++) {
         // const event = trafficEventList[i];
         // var trigger_time = Date.parse(event.trigger_time)
         // var end_time = event.end_time
@@ -130,38 +131,44 @@ function getData() {
         // var enevt_id = event.id
         // var enevt_type = event.type
         // console.log("------------------ event id : "+event.id + " " + trigger_time + " i=" + i);
-        promises.push(new Promise((resolve, reject) => {
-            Get('RSM', {"data.timestamp": {$gte: 1690335629000, $lte: 1690339571000}}, i, function (resCode, resMsg, times, Obj){
 
-                console.log("------------------ times: "+i);
+    promises.push(new Promise((resolve, reject) => {
+      Get('RSM', {"data.timestamp": {$gte: 1690335629000, $lte: 1690339571000}}, i, function (resCode, resMsg, times, Obj) {
+        if (resCode !== 200) {
+          console.error("GetOne event RSM file failed ---------------" + resCode + "-----------------");
+          reject(resCode);
+          return;
+        }
 
-                // return new Promise(function(resolve, reject){
-                    if (resCode !== 200) {
-                        console.error("GetOne event RSM file failed ---------------" + resCode + "-----------------");
-                        reject(resCode);
-                        return;
-                    }
-                    if (Obj) {
-                        console.log("===== size : "+Obj.length);
-                        Obj.forEach(element => {
-                            // console.log("in each file id : "+ element.data.timestamp);
-                            element.event_id = 0
-                            PutOne('RSM_Event', {"data.timestamp": element.data.timestamp }, element, 0, function (resCode, resMsg, times) {
-                                if (resCode !== 200) {
-                                    console.debug("post to RSM_FILTERED failed!");
-                                    return;
-                                }
-                                // console.log("update to RSM_FILTERED ---------------" + resCode + "-----------------");
-                                resolve(resCode);
-                            });
-                        });
-                    }
+        if (Obj) {
+          console.log("===== size : "+Obj.length);
+          Obj.forEach(element => {
+            element.event_id = 0;
+            PutOne('RSM_Event', {"data.timestamp": element.data.timestamp}, element, 0, function (resCode, resMsg, times) {
+              if (resCode !== 200) {
+                console.debug("post to RSM_FILTERED failed!");
+                return;
+              }
 
-            })
-        }))
-    }
-    return Promise.all(promises);
-};
+              // Delete the original data
+              DeleteOne('RSM', {"data.timestamp": element.data.timestamp}, function (resCode, resMsg, times) {
+                if (resCode !== 200) {
+                  console.debug("delete from RSM failed!");
+                  return;
+                }
+
+                console.log("update to RSM_FILTERED and delete from RSM ---------------" + resCode + "-----------------");
+                resolve(resCode);
+              });
+            });
+          });
+        }
+      });
+    }));
+  }
+
+  return Promise.all(promises);
+}
 
 
 module.exports.getEventData = function getEventData() {
