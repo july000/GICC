@@ -149,17 +149,17 @@ function getData() {
                 console.debug("post to RSM_FILTERED failed!");
                 return;
               }
+            });
+            
+            // Delete the original data
+            DeleteAll('RSM', {"data.timestamp": element.data.timestamp}, i, function (resCode, resMsg, times) {
+              if (resCode !== 200) {
+                console.debug("delete from RSM failed!");
+                return;
+              }
 
-              // Delete the original data
-              DeleteOne('RSM', {"data.timestamp": element.data.timestamp}, function (resCode, resMsg, times) {
-                if (resCode !== 200) {
-                  console.debug("delete from RSM failed!");
-                  return;
-                }
-
-                console.log("update to RSM_FILTERED and delete from RSM ---------------" + resCode + "-----------------");
-                resolve(resCode);
-              });
+              console.log("update to RSM_FILTERED and delete from RSM ---------------" + resCode + "-----------------");
+              resolve(resCode);
             });
           });
         }
