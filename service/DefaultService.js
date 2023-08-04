@@ -15,26 +15,34 @@ const { object } = require('joi');
  * returns response
  **/
 
-exports.generateCSV = function(body) {
-  return new Promise(function(resolve, reject) {
+exports.generateCSV = function(req, res, next, body) {
+  // return new Promise(function(resolve, reject, res) {
+
     console.log("------ request body ------: ");
     console.log("startTime: " + body.startTime);
     console.log("endTime: " + body.endTime);
     console.log("eventlists: " + body.eventlists);
+
 
     const eventlists = body.eventlists;
     runPythonScripts()
       .then(resMsg => {
         console.log("CSV generation successful.");
         console.log(resMsg);
-        resolve(resMsg[Object.keys(resMsg)]); // Resolve the main promise with the result from runPythonScripts
+        var results = {};
+        results['application/json'] = resMsg
+        // resolve(results[Object.keys(results)]); // Resolve the main promise with the result from runPythonScripts
+        
+        res.setHeader('Content-Type', 'application/json');
+        res.statusCode = 200;
+        res.end(JSON.stringify(results));
       })
       .catch(error => {
         console.error("CSV generation failed.");
         console.error(error);
-        reject(error); // Reject the main promise with the error
+        // reject(error); // Reject the main promise with the error
       });
-  });
+  // });
 }
 
 async function runPythonScripts() {
@@ -47,6 +55,7 @@ async function runPythonScripts() {
         var pythonProcess = spawn('python3', ['./test.py', '--start-time', 1690335629000, '--end-time', 1690339571000, '--output-file',  filepath]);
 
         pythonProcess.stdout.on('data', (data) => {
+          console.log(data.toString().trim());
           if (data.toString().trim() === 'Finished') {
             var res = {};
             res['csvUrl'] = filepath;
@@ -68,7 +77,7 @@ async function runPythonScripts() {
       }));
     }
 
-    console.log("------ end for loop");
+    
     await Promise.all(promises);
     return resMsg;
 }
