@@ -77,7 +77,7 @@ var jobInstance = schedule.scheduleJob('*/2 * * * *', () => {
             .then(function(results) {
               console.log('操作完成，结果为：', results);
               // Delete the original data
-              DeleteAll('RSM', {"data.timestamp": {$lte: startTime}}, 0, function (resCode, resMsg, times) {
+              DeleteAll('RSM', {"data.timestamp": {$lte: Date.parse(startTime)}}, 0, function (resCode, resMsg, times) {
                 if (resCode !== 200) {
                   console.debug("delete file from RSM failed!");
                   return;
@@ -104,7 +104,7 @@ function getData(trafficEventList) {
     
     var enevt_id = event.id
     var enevt_type = event.type
-    // console.log("------------------ event id : "+event.id + " " + trigger_time + " i=" + i);
+    console.log("------------------ event id : "+event.id + " " + trigger_time + " i=" + i);
 
     promises.push(new Promise((resolve, reject) => {
       const query = {
