@@ -94,7 +94,6 @@ getTrafficEvent = function getTrafficEvent(startTime, endTime) {
         "AccessToken": global.token
       }
     };
-    console.log("================= token "+startTime + "          " + endTime);
     request(options, function(error, response, body) {
       if (error) {
         reject(error);
