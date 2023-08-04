@@ -32,7 +32,7 @@ STYLE_MAP = {"car":"vehicle", "mixed_truck":"vehicle", "truck":"vehicle", "coach
 COLOR_MAP = {0:'white',1:'gray',3:'yellow',4:'pink',5:'purple',6:'green',7:'blue',8:'red',9:'brown',10:'orange',11:'black'}
 
 def run(start_time, end_time, output_file):
-    print("---------- start_time, end_time : ", type(start_time), end_time)
+    # print("---------- start_time, end_time : ", type(start_time), end_time)
     query = {'data.timestamp': {'$gte': int(start_time), '$lte': int(end_time)}}
     documents = collection.find(query)
     data_frames = (pd.json_normalize(
