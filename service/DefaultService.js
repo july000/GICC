@@ -1,7 +1,6 @@
 'use strict';
 
 const { spawn } = require('child_process');
-const { object } = require('joi');
 // const currentWorkingDirectory = process.cwd();
 // console.log(`Current working directory: ${currentWorkingDirectory}`);
 
@@ -25,7 +24,7 @@ exports.generateCSV = function(req, res, next, body) {
 
 
     const eventlists = body.eventlists;
-    runPythonScripts()
+    runPythonScripts(eventlists)
       .then(resMsg => {
         console.log("CSV generation successful.");
         console.log(resMsg);
@@ -45,14 +44,25 @@ exports.generateCSV = function(req, res, next, body) {
   // });
 }
 
-async function runPythonScripts() {
+async function runPythonScripts(eventlists) {
     var promises = [];
     var resMsg = [];
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 1; i++) {
       promises.push(new Promise((resolve, reject) => {
-        var filepath = `/data/csv/output_${i}.csv`;
-        var pythonProcess = spawn('python3', ['./test.py', '--start-time', 1690335629000, '--end-time', 1690339571000, '--output-file',  filepath]);
+        var event_id = eventlists[i].id;
+        var mecEsn = eventlists[i].esn;
+        console.log("---- event_id : " + event_id);
+        console.log("---- mecEsn : " + mecEsn);
+        var start_time = Date.parse(eventlists[i].create_time);
+        var end_time = Date.parse(eventlists[i].end_time);
+        var filepath = `/data/csv/output_${event_id}.csv`;
+
+        mecEsn = "440113GXX000200000028";
+        start_time = 1691386604599;
+        end_time =   1691386604999;
+
+        var pythonProcess = spawn('python3', ['./test.py', '--mecEsn', mecEsn, '--start-time', start_time, '--end-time', end_time, '--output-file',  filepath]);
 
         pythonProcess.stdout.on('data', (data) => {
           console.log(data.toString().trim());
