@@ -47,23 +47,30 @@ components:
     event_eventlists:
       type: object
       properties:
-        sceneType:
+        id:
           type: integer
         type:
           type: integer
-        startTime:
+        trigger_time:
           type: string
           format: date-time
-        endTime:
+        create_time:
           type: string
           format: date-time
+        end_time:
+          type: string
+          format: date-time
+        status:
+          type: integer
+        address:
+          type: string
         longitude:
           type: integer
         latitude:
           type: integer
-        vlicense:
-          type: string
-        vid:
+        crossID:
+          type: integer
+        esn:
           type: string
     response_inner:
       type: object
