@@ -91,10 +91,10 @@ var jobInstance = schedule.scheduleJob('*/2 * * * *', () => {
         var trafficEventList = JSON.parse(data).rows;
         console.log("----------------------------- trafficEventList.length : "+trafficEventList.length);
         getData(trafficEventList)
-            .then(function(results) {
-              console.log('操作完成，结果为：', results);
+            .then(() => {
+              // console.log('操作完成，结果为：', results);
               
-              DeleteAll('RSM', {"data.timestamp": {$gte: 1691386837602.0, $lte: 1691386857437.0}});
+              DeleteAll('RSM', {"data.timestamp": {$gte :1691386604599.0 , $lte:1691386604999.0}});
 
             })
             .catch(function(error) {
@@ -107,8 +107,13 @@ var jobInstance = schedule.scheduleJob('*/2 * * * *', () => {
 
 
 function getData(trafficEventList) {
+  if (trafficEventList.length === 0) {
+    console.log("trafficEventList is empty. Processing...");
+    return Promise.resolve();
+  }
+
   var promises = [];
-  for (let i = 0; i < trafficEventList.length; i++) {
+  for (let i = 0; i < 1; i++) {
     const event = trafficEventList[i];
     var trigger_time = Date.parse(event.trigger_time)
     var start_time = Date.parse(event.trigger_time)
@@ -122,7 +127,8 @@ function getData(trafficEventList) {
     promises.push(new Promise((resolve, reject) => {
       const query = {
         // "mecEsn": event.esn,
-        "data.timestamp": {$gte: 1691386837602.0, $lte: 1691386857437.0}
+        "data.mecEsn": "440113GXX000200000028",
+        "data.timestamp": {$gte :1691386604599.0 , $lte:1691386604999.0}
       };
       Get('RSM', query, i, function (resCode, resMsg, times, Obj) {
         if (resCode !== 200) {
@@ -132,18 +138,18 @@ function getData(trafficEventList) {
         }
 
         if (Obj) {
-          // console.log("===== size : " + Obj.length);
-          // Obj.forEach(element => {
-          //   element.event_id = enevt_id;
-          //   PutOne('RSM_Event', {"data.timestamp": element.data.timestamp}, element, 0, function (resCode, resMsg, times) {
-          //     if (resCode !== 200) {
-          //       console.debug("post to RSM_Event failed!");
-          //       return;
-          //     }
-          //     console.log("post to RSM_Event -------- "+ resCode +" -----------------")
-          //   });
+          console.log("===== size : " + Obj.length);
+          Obj.forEach(element => {
+            element.event_id = enevt_id;
+            PutOne('RSM_Event', {"data.timestamp": element.data.timestamp}, element, 0, function (resCode, resMsg, times) {
+              if (resCode !== 200) {
+                console.debug("post to RSM_Event failed!");
+                return;
+              }
+              console.log("post to RSM_Event -------- "+ resCode +" -----------------")
+            });
             
-          // });
+          });
         }
       });
     }));
