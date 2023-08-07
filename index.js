@@ -10,6 +10,8 @@ const getTrafficEvent = require('./common/Util').getTrafficEvent;
 
 var serverPort = 8080;
 global.token = ''
+var isConnected = false;
+
 
 var WebSocketClient = require('websocket').client;
 var client = new WebSocketClient();
@@ -20,6 +22,7 @@ client.on('connectFailed', function(error) {
 
 client.on('connect', function(connection) {
   console.log('WebSocket Client Connected');
+  isConnected = true; 
 
   connection.on('error', function(error) {
       console.log("Connection Error: " + error.toString());
@@ -27,6 +30,8 @@ client.on('connect', function(connection) {
 
   connection.on('close', function() {
       console.log('echo-protocol Connection Closed');
+      isConnected = false; 
+      reconnect();
   });
 
   connection.on('message', function(message) {
@@ -35,14 +40,14 @@ client.on('connect', function(connection) {
       if (mess.type !== 14){
         return
       }
-      var obj = new RSMDataObj(mess);
-      PostOne('RSM', obj, 0, function(resCode, resMsg, times) {
-        if (resCode !== 200) {
-          console.debug("Save file to RSM collection failed!");
-          return;
-        } 
-        console.log("Save file to RSM collection ---------------" + resCode + "-----------------");
-      });
+      // var obj = new RSMDataObj(mess);
+      // PostOne('RSM', obj, 0, function(resCode, resMsg, times) {
+      //   if (resCode !== 200) {
+      //     console.debug("Save file to RSM collection failed!");
+      //     return;
+      //   } 
+      //   // console.log("Save file to RSM collection ---------------" + resCode + "-----------------");
+      // });
     }
   });
     
@@ -56,6 +61,18 @@ client.on('connect', function(connection) {
   sendNumber();
 });
 
+function connect() {
+  client.connect('ws://36.138.2.41:9873/api/websocket/connectServer/sim-gicc'); 
+}
+
+function reconnect() {
+  if (!isConnected) {
+      console.log('Reconnecting...');
+      setTimeout(connect, 5000); // Reconnect after a 5-second delay
+  }
+}
+
+
 var jobInstance = schedule.scheduleJob('*/2 * * * *', () => {
   console.log('------------------------------------The job is running at ' + new Date());
   var now = new Date();
@@ -66,7 +83,7 @@ var jobInstance = schedule.scheduleJob('*/2 * * * *', () => {
   var startTime = startTimeDate.toISOString();
   var endTime = endTimeDate.toISOString();
 
-  // console.log("------- startTime endTime : " +startTime + "   " +endTime);
+  console.log("------- startTime endTime : " +startTime + "   " +endTime);
 
   getTrafficEvent(startTime, endTime)
     .then(data => {
@@ -76,14 +93,9 @@ var jobInstance = schedule.scheduleJob('*/2 * * * *', () => {
         getData(trafficEventList)
             .then(function(results) {
               console.log('操作完成，结果为：', results);
-              // Delete the original data
-              DeleteAll('RSM', {"data.timestamp": {$lte: Date.parse(startTime)}}, 0, function (resCode, resMsg, times) {
-                if (resCode !== 200) {
-                  console.debug("delete file from RSM failed!");
-                  return;
-                }
-                console.log("delete file from RSM success! ---------------" + resCode + "-----------------");
-              });
+              
+              DeleteAll('RSM', {"data.timestamp": {$gte: 1691386837602.0, $lte: 1691386857437.0}});
+
             })
             .catch(function(error) {
               console.log('操作失败，错误信息为：', error);
@@ -104,12 +116,13 @@ function getData(trafficEventList) {
     
     var enevt_id = event.id
     var enevt_type = event.type
-    console.log("------------------ event id : "+event.id + " " + trigger_time + " i=" + i);
+    // console.log(event)
+    // console.log("------------------ event id : "+event.id + " " + trigger_time + " i=" + i);
 
     promises.push(new Promise((resolve, reject) => {
       const query = {
-        "mecEsn": event.esn,
-        "data.timestamp": {$gte: start_time, $lte: end_time}
+        // "mecEsn": event.esn,
+        "data.timestamp": {$gte: 1691386837602.0, $lte: 1691386857437.0}
       };
       Get('RSM', query, i, function (resCode, resMsg, times, Obj) {
         if (resCode !== 200) {
@@ -119,17 +132,18 @@ function getData(trafficEventList) {
         }
 
         if (Obj) {
-          console.log("===== size : " + Obj.length);
-          Obj.forEach(element => {
-            element.event_id = enevt_id;
-            PutOne('RSM_Event', {"data.timestamp": element.data.timestamp}, element, 0, function (resCode, resMsg, times) {
-              if (resCode !== 200) {
-                console.debug("post to RSM_FILTERED failed!");
-                return;
-              }
-            });
+          // console.log("===== size : " + Obj.length);
+          // Obj.forEach(element => {
+          //   element.event_id = enevt_id;
+          //   PutOne('RSM_Event', {"data.timestamp": element.data.timestamp}, element, 0, function (resCode, resMsg, times) {
+          //     if (resCode !== 200) {
+          //       console.debug("post to RSM_Event failed!");
+          //       return;
+          //     }
+          //     console.log("post to RSM_Event -------- "+ resCode +" -----------------")
+          //   });
             
-          });
+          // });
         }
       });
     }));
@@ -148,8 +162,7 @@ var options = {
 
 var expressAppConfig = oas3Tools.expressAppConfig(path.join(__dirname, 'api/openapi.yaml'), options);
 var app = expressAppConfig.getApp();
-client.connect('ws://36.138.2.41:9873/api/websocket/connectServer/sim-gicc'); //, 'echo-protocol');
-
+connect();
 // Initialize the Swagger middleware
 http.createServer(app).listen(serverPort, function () {
     console.log('Your server is listening on port %d (http://localhost:%d)', serverPort, serverPort);
