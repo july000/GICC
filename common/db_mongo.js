@@ -19,7 +19,8 @@ module.exports = {
     dbclose: MongoClose,
     dbdrop: MongoDrop,
     dbfindDBs: MongoGetDBs,
-    dbremoveAll: MongoRemoveAll
+    dbremoveAll: MongoRemoveAll,
+    dbcount: MongoCount
 };
 
 function defaultProCreate() {
@@ -543,25 +544,32 @@ function MongoGetDBs(callback){
     });
 }
 
-function MongoRemoveAll(collName, query, times, callback) {
+async function MongoRemoveAll(collName, query) {
     /* set Schema */
     var Schema = SchemaSelector(collName);
     var DataModel = SetSchema(Schema, collName);
-    DataModel.deleteMany(query)
+    await DataModel.deleteMany(query)
         .then(result => {
-            console.log("------ " + result + " ------");
-            callback(200, "RemoveAll done!", times);
-            // Remove the entire collection
-            DataModel.collection.drop((err, result) => {
-                    if (err) {
-                            console.error('Error removing collection:', err);
-                    } else {
-                            console.log('Collection removed successfully');
-                    }
-            });
+            console.log(`${result.deletedCount} documents deleted`);
         }) 
         .catch(err => {
             console.debug(err);
-            callback(500, err, times);
+            console.error('Error deleting documents:', err);
         });
 }
+
+async function MongoCount(collName) {
+    /* set Schema */
+    var Schema = SchemaSelector(collName);
+    var DataModel = SetSchema(Schema, collName);
+    
+    return await DataModel.countDocuments({})
+      .then(count => {
+        console.log('Number of documents in the collection:', count);
+        return count;
+      })
+      .catch(err => {
+        console.error('Error counting documents:', err);
+        throw err;
+      });
+  }

@@ -51,6 +51,10 @@ GetDBs = function GetDBs(callback){
     db.dbfindDBs(callback);
 };
 
-DeleteAll = function DeleteAll(collName, query, times, callback){
-    db.dbremoveAll(collName, query, times, callback);
+DeleteAll = function DeleteAll(collName, query){
+    db.dbremoveAll(collName, query);
 };
+
+Count = function Count(collName){
+    db.dbcount(collName);
+}
