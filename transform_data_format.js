@@ -6,7 +6,7 @@ const fs = require('fs');
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 const Json2csvParser = require('json2csv').Parser;
 const flat = require('flat');
-
+const coordtransform = require('coordtransform');
 
 var path = require('path');
 var http = require('http');
@@ -48,6 +48,23 @@ const csvFields = [
   { id: 'ptcType', title: 'Category' },
   { id: 'data.timestamp', title: 'Time' }
 ];
+
+// 将 GPS 坐标转换为火星坐标系坐标
+function convertToGCJ02(latitude, longitude) {
+  const result = coordtransform.wgs84togcj02(longitude, latitude);
+  return {
+    latitude: result[1],
+    longitude: result[0]
+  };
+}
+
+// 示例使用
+const gpsLatitude = 39.9087; // GPS latitude
+const gpsLongitude = 116.3974; // GPS longitude
+
+const gcj02Coords = convertToGCJ02(gpsLatitude, gpsLongitude);
+console.log('GCJ-02 coordinates:', gcj02Coords.latitude, gcj02Coords.longitude);
+
 
 function getParticipantCount(data) {
   const participantCount = Object.keys(data).reduce((count, key) => {
