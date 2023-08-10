@@ -1,11 +1,7 @@
 'use strict';
 
-const { spawn } = require('child_process');
-// const currentWorkingDirectory = process.cwd();
-// console.log(`Current working directory: ${currentWorkingDirectory}`);
-
-
-
+// const { spawn } = require('child_process');
+const {rsm2Dataverse} = require('../transform_data_format').rsm_to_dataverse
 
 /**
  * generate csv files
@@ -24,6 +20,8 @@ exports.generateCSV = function(req, res, next, body) {
 
 
     const eventlists = body.eventlists;
+
+
     runPythonScripts(eventlists)
       .then(resMsg => {
         console.log("CSV generation successful.");
@@ -48,7 +46,7 @@ async function runPythonScripts(eventlists) {
     var promises = [];
     var resMsg = [];
 
-    for (let i = 0; i < 1; i++) {
+    for (let i = 0; i < eventlists.length; i++) {
       promises.push(new Promise((resolve, reject) => {
         var event_id = eventlists[i].id;
         var mecEsn = eventlists[i].esn;
@@ -58,32 +56,38 @@ async function runPythonScripts(eventlists) {
         var end_time = Date.parse(eventlists[i].end_time);
         var filepath = `/data/csv/output_${event_id}.csv`;
 
-        mecEsn = "440113GXX000200000028";
-        start_time = 1691386604599;
-        end_time =   1691386604999;
-
-        var pythonProcess = spawn('python3', ['./test.py', '--mecEsn', mecEsn, '--start-time', start_time, '--end-time', end_time, '--output-file',  filepath]);
-
-        pythonProcess.stdout.on('data', (data) => {
-          console.log(data.toString().trim());
-          if (data.toString().trim() === 'Finished') {
-            var res = {};
-            res['csvUrl'] = filepath;
-            res['eventID'] = 0;
-            resMsg.push(res);
-            console.log("--------- add message to response" + resMsg);
-            resolve();
+        Get('RSM_Event', {"data.mecEsn":mecEsn, "data.timestamp": {$gte: start_time, $lte: end_time}}, 0, function (resCode, resMsg, times, Obj) {
+          if (resCode !== 200) {
+            console.error("GetOne event RSM file failed ---------------" + resCode + "-----------------");
+            return;
+          }
+          if (Obj) {
+            rsm2Dataverse(Obj, filepath);
           }
         });
 
-        pythonProcess.stderr.on('data', (data) => {
-          console.error(`Python stderr: ${data}`);
-          reject(data);
-        });
+        // var pythonProcess = spawn('python3', ['./test.py', '--mecEsn', mecEsn, '--start-time', start_time, '--end-time', end_time, '--output-file',  filepath]);
 
-        pythonProcess.on('close', (code) => {
-          console.log(`Python process exited with code ${code}`);
-        });
+        // pythonProcess.stdout.on('data', (data) => {
+        //   console.log(data.toString().trim());
+        //   if (data.toString().trim() === 'Finished') {
+        //     var res = {};
+        //     res['csvUrl'] = filepath;
+        //     res['eventID'] = 0;
+        //     resMsg.push(res);
+        //     console.log("--------- add message to response" + resMsg);
+        //     resolve();
+        //   }
+        // });
+
+        // pythonProcess.stderr.on('data', (data) => {
+        //   console.error(`Python stderr: ${data}`);
+        //   reject(data);
+        // });
+
+        // pythonProcess.on('close', (code) => {
+        //   console.log(`Python process exited with code ${code}`);
+        // });
       }));
     }
 

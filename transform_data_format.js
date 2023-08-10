@@ -204,14 +204,5 @@ function rsm_to_dataverse(documents, outputFile){
   }
   writeParticipantDataToCsv(extractedData, csvFields, outputFile);
 }
+module.exports.rsm_to_dataverse = rsm_to_dataverse
   
-Get('RSM_Event', {"data.mecEsn":"440113GXX000200000028", "data.timestamp": {$gte: 1691386604599.0, $lte: 1691386604999.0}}, 0, function (resCode, resMsg, times, Obj) {
-  if (resCode !== 200) {
-    console.error("GetOne event RSM file failed ---------------" + resCode + "-----------------");
-    return;
-  }
-  if (Obj) {
-    const documents = [/* Array of JSON documents */];
-    const normalizedDataFrame = rsm_to_dataverse(Obj, "/data/csv/output_test222.csv");
-  }
-});

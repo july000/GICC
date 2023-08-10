@@ -40,14 +40,14 @@ client.on('connect', function(connection) {
       if (mess.type !== 14){
         return
       }
-      // var obj = new RSMDataObj(mess);
-      // PostOne('RSM', obj, 0, function(resCode, resMsg, times) {
-      //   if (resCode !== 200) {
-      //     console.debug("Save file to RSM collection failed!");
-      //     return;
-      //   } 
-      //   // console.log("Save file to RSM collection ---------------" + resCode + "-----------------");
-      // });
+      var obj = new RSMDataObj(mess);
+      PostOne('RSM', obj, 0, function(resCode, resMsg, times) {
+        if (resCode !== 200) {
+          console.debug("Save file to RSM collection failed!");
+          return;
+        } 
+        // console.log("Save file to RSM collection ---------------" + resCode + "-----------------");
+      });
     }
   });
     
@@ -77,13 +77,11 @@ var jobInstance = schedule.scheduleJob('*/2 * * * *', () => {
   console.log('------------------------------------The job is running at ' + new Date());
   var now = new Date();
   var timezoneOffset = 8 * 60;
-  var startTimeDate = new Date(now.getTime() + timezoneOffset * 60 * 1000 - 10 * 60 * 1000); // 获取 startTime 的前五分钟
-  var endTimeDate = new Date(now.getTime() + timezoneOffset * 60 * 1000 ); // 获取 startTime 的前五分钟
+  var startTimeDate = new Date(now.getTime() + timezoneOffset * 60 * 1000 - 5 * 60 * 1000);
+  var endTimeDate = new Date(now.getTime() + timezoneOffset * 60 * 1000 );
 
   var startTime = startTimeDate.toISOString();
   var endTime = endTimeDate.toISOString();
-
-  console.log("------- startTime endTime : " +startTime + "   " +endTime);
 
   getTrafficEvent(startTime, endTime)
     .then(data => {
@@ -94,7 +92,7 @@ var jobInstance = schedule.scheduleJob('*/2 * * * *', () => {
             .then(() => {
               // console.log('操作完成，结果为：', results);
               
-              DeleteAll('RSM', {"data.timestamp": {$gte :1691386604599.0 , $lte:1691386604999.0}});
+              DeleteAll('RSM', {"data.timestamp": {$lte:startTime}});
 
             })
             .catch(function(error) {
@@ -113,23 +111,22 @@ function getData(trafficEventList) {
   }
 
   var promises = [];
-  for (let i = 0; i < 1; i++) {
+  for (let i = 0; i < trafficEventList.length; i++) {
     const event = trafficEventList[i];
-    var trigger_time = Date.parse(event.trigger_time)
     var start_time = Date.parse(event.trigger_time)
     var end_time = Date.parse(event.end_time)
     
     var enevt_id = event.id
-    var enevt_type = event.type
+    var mecEsn = event.esn
     // console.log(event)
     // console.log("------------------ event id : "+event.id + " " + trigger_time + " i=" + i);
 
     promises.push(new Promise((resolve, reject) => {
       const query = {
-        // "mecEsn": event.esn,
-        "data.mecEsn": "440113GXX000200000028",
-        "data.timestamp": {$gte :1691386604599.0 , $lte:1691386604999.0}
+        "data.mecEsn": mecEsn,
+        "data.timestamp": {$gte:start_time, $lte:end_time}
       };
+      console.log("RSM query condition :" + JSON.stringify(query));
       Get('RSM', query, i, function (resCode, resMsg, times, Obj) {
         if (resCode !== 200) {
           console.error("GetOne event RSM file failed ---------------" + resCode + "-----------------");
@@ -146,15 +143,13 @@ function getData(trafficEventList) {
                 console.debug("post to RSM_Event failed!");
                 return;
               }
-              console.log("post to RSM_Event -------- "+ resCode +" -----------------")
+              // console.log("post to RSM_Event -------- "+ resCode +" -----------------")
             });
-            
           });
         }
       });
     }));
   }
-
   return Promise.all(promises);
 }
 
