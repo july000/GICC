@@ -1,12 +1,10 @@
 'use strict';
 const jsonpath = require('jsonpath');
 const _ = require('lodash');
-const { DataFrame } = require('dataframe-js');
-const fs = require('fs');
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
-const Json2csvParser = require('json2csv').Parser;
 const flat = require('flat');
 const coordtransform = require('coordtransform');
+const radians = require('degrees-radians');
 
 var path = require('path');
 var http = require('http');
@@ -20,6 +18,43 @@ var serverPort = 8080;
 global.token = ''
 var participantData = [];
 
+function latLonToENU(lat1, lon1, lat2, lon2, callback) {
+  try {
+    import('geodesy/latlon-ellipsoidal-vincenty.js')
+      .then(module => {
+        const LatLon = module.default;
+
+        // Create LatLon objects
+        const p1 = new LatLon(lat1, lon1);
+        const p2 = new LatLon(lat2, lon2);
+
+        // Convert to ECEF
+        const referenceEcef = p1.toCartesian();
+        const pointEcef = p2.toCartesian();
+
+        // Compute diffs in ECEF
+        const deltaLat = pointEcef.x - referenceEcef.x;
+        const deltaLon = pointEcef.y - referenceEcef.y;
+        const deltaHeight = pointEcef.z - referenceEcef.z;
+
+        // Transformation params
+        const sinLat1 = Math.sin(radians(p1.lat));
+        const cosLat1 = Math.cos(radians(p1.lat));
+        const sinLon1 = Math.sin(radians(p1.lon));
+        const cosLon1 = Math.cos(radians(p1.lon));
+
+        // Transform ECEF diffs to ENU
+        const east = -sinLon1 * deltaLat + cosLon1 * deltaLon;
+        const north = -sinLat1 * cosLon1 * deltaLat - sinLat1 * sinLon1 * deltaLon + cosLat1 * deltaHeight;
+        const up = cosLat1 * cosLon1 * deltaLat + cosLat1 * sinLon1 * deltaLon + sinLat1 * deltaHeight;
+
+        callback(null, { east, north, up });
+      })
+      .catch(err => callback(err, null));
+  } catch (error) {
+    callback(error, null);
+  }
+}
 
 const COLOR_MAP = {
   0: 'white',
@@ -41,8 +76,8 @@ const csvFields = [
   { id: 'size.length', title: 'Length' },
   { id: 'size.width', title: 'Width' },
   { id: 'size.height', title: 'Height' },
-  { id: 'pos.lon', title: 'PositionX' },
-  { id: 'pos.lat', title: 'PositionY' },
+  { id: 'pos.lat', title: 'PositionX' },
+  { id: 'pos.lon', title: 'PositionY' },
   { id: 'pos.ele', title: 'PositionZ' },
   { id: 'ptcID', title: 'ID' },
   { id: 'ptcType', title: 'Category' },
@@ -57,14 +92,6 @@ function convertToGCJ02(latitude, longitude) {
     longitude: result[0]
   };
 }
-
-// 示例使用
-const gpsLatitude = 39.9087; // GPS latitude
-const gpsLongitude = 116.3974; // GPS longitude
-
-const gcj02Coords = convertToGCJ02(gpsLatitude, gpsLongitude);
-console.log('GCJ-02 coordinates:', gcj02Coords.latitude, gcj02Coords.longitude);
-
 
 function getParticipantCount(data) {
   const participantCount = Object.keys(data).reduce((count, key) => {
@@ -112,7 +139,7 @@ function transformData(flattenedData) {
         return value / 100;
       } else if (/.*\.vehicleColor$/.test(key)) {
         return COLOR_MAP[value] || value;
-      }
+      } 
     }
     return value;
   });
@@ -120,7 +147,37 @@ function transformData(flattenedData) {
   return transformedData;
 }
 
-function writeParticipantDataToCsv(participantData, participantFields, outputPath) {
+async function writeParticipantDataToCsv(participantData, participantFields, outputPath) {
+
+  const updatedData = await Promise.all(participantData.map(async (data) => {
+    const gcjCoords = convertToGCJ02(data['pos.lat'], data['pos.lon']);
+    const referenceLat = 23.023899623618;
+    const referenceLon = 113.488177461743;
+    try {
+      const enuCoords = await new Promise((resolve, reject) => {
+        latLonToENU(gcjCoords.latitude, gcjCoords.longitude, referenceLat, referenceLon, (error, enuCoords) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(enuCoords);
+          }
+        });
+      });
+
+      data['pos.lat'] = enuCoords.east;
+      data['pos.lon'] = enuCoords.north;
+      data['pos.ele'] = enuCoords.up;
+    } catch (error) {
+      console.error('Error occurred while computing ENU:', error);
+    }
+
+    return data;
+  }));
+  writeDataToCsv(updatedData, participantFields, outputPath);
+}
+
+
+function writeDataToCsv(participantData, participantFields, outputPath){
   const csvWriterOptions = {
     path: outputPath,
     header: participantFields
@@ -140,12 +197,9 @@ function writeParticipantDataToCsv(participantData, participantFields, outputPat
 function rsm_to_dataverse(documents, outputFile){
   for (const document of documents) {
     const flattenedData = flat(document);
-    // console.log(flattenedData)
     let transformedData = transformData(flattenedData);
-    // console.log(transformedData);
 
     const participantCount = getParticipantCount(transformedData);
-    console.log(participantCount);
     var extractedData = extractParticipantData(transformedData, participantCount, csvFields);
   }
   writeParticipantDataToCsv(extractedData, csvFields, outputFile);
@@ -157,9 +211,7 @@ Get('RSM_Event', {"data.mecEsn":"440113GXX000200000028", "data.timestamp": {$gte
     return;
   }
   if (Obj) {
-    console.log("===== size : " +  Obj.length);
     const documents = [/* Array of JSON documents */];
-    const normalizedDataFrame = rsm_to_dataverse(Obj, "/data/csv/output_test.csv");
-
+    const normalizedDataFrame = rsm_to_dataverse(Obj, "/data/csv/output_test222.csv");
   }
 });
