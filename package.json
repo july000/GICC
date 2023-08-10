@@ -18,17 +18,26 @@
     "csv-parser": "^3.0.0",
     "csv-writer": "^1.6.0",
     "dataframe-js": "^1.4.4",
+    "degrees": "^0.0.2",
+    "degrees-radians": "^1.0.3",
     "flat": "^5.0.2",
     "generic-promise-pool": "^1.2.2",
+    "geodesy": "^2.4.0",
     "joi": "^17.9.2",
     "js-yaml": "^3.3.0",
     "json2csv": "^6.0.0-alpha.2",
     "jsonexport": "^3.2.0",
     "jsonpath": "^1.1.1",
+    "math": "^0.0.3",
     "mongoose": "^7.3.4",
     "node-schedule": "^2.1.1",
     "oas3-tools": "^2.2.3",
+    "radians-degrees": "^1.0.0",
     "request": "^2.88.2",
     "websocket": "^1.0.34"
+  },
+  "devDependencies": {
+    "esm": "^3.2.25",
+    "ts-node": "^10.9.1"
   }
 }
