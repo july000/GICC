@@ -113,6 +113,14 @@ function extractParticipantData(data, participantCount, participantFields) {
 
   for (let i = 0; i < participantCount; i++) {
     const participantValues = {};
+
+    const latKey = `data.rsms.0.participants.${i}.pos.lat`;
+    const latValue = data[latKey];
+
+    if (latValue < 20.34 || latValue > 25.56) {
+      continue;
+    }
+
     for (const field of participantFields) {
       const key = `data.rsms.0.participants.${i}.${field.id}`;
       const value = data[key] || '';
@@ -206,3 +214,12 @@ function rsm_to_dataverse(documents, outputFile){
 }
 module.exports.rsm_to_dataverse = rsm_to_dataverse
   
+// Get('RSM', {"data.mecEsn":"440113GXX000200000012"}, 0, function (resCode, resMsg, times, Obj) {
+//   if (resCode !== 200) {
+//     console.error("GetOne event RSM file failed ---------------" + resCode + "-----------------");
+//     return;
+//   }
+//   if (Obj) {
+//     rsm_to_dataverse(Obj, "/data/csv/test.csv");
+//   }
+// });
