@@ -70,18 +70,53 @@ const COLOR_MAP = {
   11: 'black'
 };
 
+const CATEGORY_MAP = {
+  1: 'vehicle',
+  2: 'vehicle',
+  3: 'vehicle',
+  4: 'vehicle',
+  5: 'pedestrian',
+  6: 'bike',
+  7: 'vehicle',
+  8: 'vehicle',
+  9: 'vehicle'
+};
+
+const STYLE_MAP = {
+  1: 'car',
+  2: 'van_truck',
+  3: 'car',
+  4: 'motor',
+  5: 'man',
+  6: 'normal',
+  7: 'tricycle',
+  8: 'coach',
+  9: 'truck'
+};
+
 const csvFields = [
-  { id: 'vehicleColor', title: 'Color' },
-  { id: 'heading', title: 'Yaw' },
-  { id: 'size.length', title: 'Length' },
-  { id: 'size.width', title: 'Width' },
-  { id: 'size.height', title: 'Height' },
+  { id: 'ptcId', title: 'ID' },
+  { id: 'data.timestamp', title: 'Time' },
   { id: 'pos.lat', title: 'PositionX' },
   { id: 'pos.lon', title: 'PositionY' },
   { id: 'pos.ele', title: 'PositionZ' },
-  { id: 'ptcID', title: 'ID' },
+  { id: 'size.length', title: 'Length' },
+  { id: 'size.width', title: 'Width' },
+  { id: 'size.height', title: 'Height' },
+  { id: 'heading', title: 'Yaw' },
+  { id: 'Pitch', title: 'Pitch' },
+  { id: 'Roll', title: 'Roll' },
+  { id: 'VX', title: 'VX'},
+  { id: 'VY', title: 'VY'},
+  { id: 'VZ', title: 'VZ'},
+  { id: 'AX', title: 'AX'},
+  { id: 'AY', title: 'AY'},
+  { id: 'AZ', title: 'AZ'},
   { id: 'ptcType', title: 'Category' },
-  { id: 'data.timestamp', title: 'Time' }
+  { id: 'Style', title: 'Style'},
+  { id: 'vehicleColor', title: 'Color' },
+  { id: 'vehicleColor', title: 'ModelColor' },
+  { id: 'Ego', title: 'Ego' },
 ];
 
 // 将 GPS 坐标转换为火星坐标系坐标
@@ -126,6 +161,7 @@ function extractParticipantData(data, participantCount, participantFields) {
       const value = data[key] || '';
       participantValues[field.id] = value;
     }
+    participantValues['Ego'] = 'N';
     participantValues['data.timestamp'] = data['data.timestamp']
     participantData.push(participantValues);
 
@@ -175,6 +211,10 @@ async function writeParticipantDataToCsv(participantData, participantFields, out
       data['pos.lat'] = enuCoords.east;
       data['pos.lon'] = enuCoords.north;
       data['pos.ele'] = enuCoords.up;
+
+      const { ptcType } = data;
+      data['ptcType'] = CATEGORY_MAP[ptcType] || '';
+      data['Style'] = STYLE_MAP[ptcType] || '';
     } catch (error) {
       console.error('Error occurred while computing ENU:', error);
     }
