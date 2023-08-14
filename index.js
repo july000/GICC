@@ -73,7 +73,7 @@ function reconnect() {
 }
 
 
-var jobInstance = schedule.scheduleJob('*/2 * * * *', () => {
+var jobInstance = schedule.scheduleJob('*/5 * * * * *', () => {
   console.log('------------------------------------The job is running at ' + new Date());
   var now = new Date();
   var timezoneOffset = 8 * 60;
@@ -88,16 +88,10 @@ var jobInstance = schedule.scheduleJob('*/2 * * * *', () => {
         // console.log(data);
         var trafficEventList = JSON.parse(data).rows;
         console.log("----------------------------- trafficEventList.length : "+trafficEventList.length);
-        getData(trafficEventList)
-            .then(() => {
-              // console.log('操作完成，结果为：', results);
-              
-              DeleteAll('RSM', {"data.timestamp": {$lte:startTime}});
+        var results = getData(trafficEventList)
+        console.log("delete condition startTime" + Date.parse(startTime));
+        DeleteAll('RSM', {"data.timestamp": {$lte:Date.parse(startTime)}});
 
-            })
-            .catch(function(error) {
-              console.log('操作失败，错误信息为：', error);
-            });
     }).catch(error => {
       console.error(error);
     });
