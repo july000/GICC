@@ -18,7 +18,7 @@ var serverPort = 8080;
 global.token = ''
 var participantData = [];
 
-function latLonToENU(lat1, lon1, lat2, lon2, callback) {
+function latLonToENU(lat1, lon1, reflat2, reflon2, callback) {
   try {
     import('geodesy/latlon-ellipsoidal-vincenty.js')
       .then(module => {
@@ -26,11 +26,10 @@ function latLonToENU(lat1, lon1, lat2, lon2, callback) {
 
         // Create LatLon objects
         const p1 = new LatLon(lat1, lon1);
-        const p2 = new LatLon(lat2, lon2);
-
+        const refp2 = new LatLon(reflat2, reflon2);
         // Convert to ECEF
-        const referenceEcef = p1.toCartesian();
-        const pointEcef = p2.toCartesian();
+        const pointEcef = p1.toCartesian();
+        const referenceEcef = refp2.toCartesian();
 
         // Compute diffs in ECEF
         const deltaLat = pointEcef.x - referenceEcef.x;
@@ -164,9 +163,7 @@ function extractParticipantData(data, participantCount, participantFields) {
     participantValues['Ego'] = 'N';
     participantValues['data.timestamp'] = data['data.timestamp']
     participantData.push(participantValues);
-
   }
-
   return participantData;
 }
 
@@ -176,7 +173,7 @@ function transformData(flattenedData) {
       if (/.*\.speed$/.test(key)) {
         return value * 0.02;
       } else if (/.*\.heading$/.test(key)) {
-        return value * 0.0125;
+        return (90.0 - value * 0.0125) % 360.0;
       } else if (key === 'data.timestamp') {
         return value / 1000;
       } else if (/\.size\.(length|width|height)$/.test(key)) {
@@ -206,7 +203,7 @@ async function writeParticipantDataToCsv(participantData, participantFields, out
           }
         });
       });
-
+      
       data['pos.lat'] = enuCoords.east;
       data['pos.lon'] = enuCoords.north;
       data['pos.ele'] = enuCoords.up;
