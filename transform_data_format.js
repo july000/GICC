@@ -192,7 +192,6 @@ function transformData(flattenedData) {
 }
 
 async function writeParticipantDataToCsv(participantData, participantFields, outputPath) {
-
   const updatedData = await Promise.all(participantData.map(async (data) => {
     const gcjCoords = convertToGCJ02(data['pos.lat'], data['pos.lon']);
     const referenceLat = 23.023899623618;
@@ -253,13 +252,3 @@ function rsm_to_dataverse(documents, outputFile){
   writeParticipantDataToCsv(extractedData, csvFields, outputFile);
 }
 module.exports.rsm_to_dataverse = rsm_to_dataverse
-  
-// Get('RSM', {"data.mecEsn":"440113GXX000200000012"}, 0, function (resCode, resMsg, times, Obj) {
-//   if (resCode !== 200) {
-//     console.error("GetOne event RSM file failed ---------------" + resCode + "-----------------");
-//     return;
-//   }
-//   if (Obj) {
-//     rsm_to_dataverse(Obj, "/data/csv/test.csv");
-//   }
-// });

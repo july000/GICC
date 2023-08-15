@@ -32,18 +32,21 @@ components:
       properties:
         startTime:
           type: string
-          format: date-time
+          # format: date-time
         endTime:
           type: string
-          format: date-time
+          # format: date-time
         eventlists:
           type: array
           items:
             $ref: '#/components/schemas/event_eventlists'
     response:
-      type: array
-      items:
-        $ref: '#/components/schemas/response_inner'
+      type: object
+      properties:
+        eventResultLists:
+          type: array
+          items:
+            $ref: '#/components/schemas/response_inner'
     event_eventlists:
       type: object
       properties:
@@ -53,21 +56,21 @@ components:
           type: integer
         trigger_time:
           type: string
-          format: date-time
+          # format: date-time
         create_time:
           type: string
-          format: date-time
+          # format: date-time
         end_time:
           type: string
-          format: date-time
+          # format: date-time
         status:
           type: integer
         address:
           type: string
         longitude:
-          type: integer
+          type: number
         latitude:
-          type: integer
+          type: number
         crossID:
           type: integer
         esn:
@@ -79,9 +82,12 @@ components:
           type: integer
         csvUrl:
           type: string
+        isValid:
+          type: boolean
       example:
         csvUrl: csvUrl
         evnetID: 0
+        isValid: true
   requestBodies:
     scene:
       content:
