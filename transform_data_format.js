@@ -230,12 +230,6 @@ function writeDataToCsv(participantData, participantFields, outputPath){
   const csvWriterInstance = createCsvWriter(csvWriterOptions);
 
   return csvWriterInstance.writeRecords(participantData)
-    .then(() => {
-      console.log('CSV file has been updated with participant data successfully.');
-    })
-    .catch(err => {
-      console.error('Error occurred while writing CSV file:', err);
-    });
 }
 
 function rsm_to_dataverse(documents, outputFile){

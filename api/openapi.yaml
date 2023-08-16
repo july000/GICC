@@ -4,7 +4,7 @@ info:
   description: This is a GICC Server based on the OpenAPI 3.0 specification
   version: 1.0.11
 servers:
-- url: http://localhost:8080
+- url: http://10.66.8.42:8080
 paths:
   /generateSceneData:
     post:

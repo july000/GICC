@@ -51,7 +51,7 @@ GetDBs = function GetDBs(callback){
     db.dbfindDBs(callback);
 };
 
-DeleteAll = function DeleteAll(collName, query){
+exports.DeleteAll = function DeleteAll(collName, query){
     db.dbremoveAll(collName, query);
 };
 

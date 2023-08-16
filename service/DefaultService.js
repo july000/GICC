@@ -1,6 +1,4 @@
 'use strict';
-
-// const { spawn } = require('child_process');
 const {rsm_to_dataverse} = require('../transform_data_format')
 
 /**
@@ -12,10 +10,8 @@ const {rsm_to_dataverse} = require('../transform_data_format')
 
 exports.generateCSV = function(req, res, next, body) {
   const eventlists = body.eventlists;
-  runPythonScripts(eventlists)
+  convert(eventlists)
     .then(resMsg => {
-      console.log("CSV generation successful.");
-      console.log(resMsg);
       var results = {};
       results['eventResultLists'] = resMsg
       
@@ -24,12 +20,11 @@ exports.generateCSV = function(req, res, next, body) {
       res.end(JSON.stringify(results));
     })
     .catch(error => {
-      console.error("CSV generation failed.");
       console.error(error);
     });
 }
 
-async function runPythonScripts(eventlists) {
+async function convert(eventlists) {
   var promises = [];
   var resEventMsg = [];
 
@@ -37,8 +32,8 @@ async function runPythonScripts(eventlists) {
     promises.push(new Promise(async (resolve, reject) => {
       var event_id = eventlists[i].id;
       var mecEsn = eventlists[i].esn;
-      console.log("---- event_id : " + event_id);
-      console.log("---- mecEsn : " + mecEsn);
+      // console.log("---- event_id : " + event_id);
+      // console.log("---- mecEsn : " + mecEsn);
       var start_time = Date.parse(eventlists[i].create_time);
       var end_time = Date.parse(eventlists[i].end_time);
       var filepath = `/data/csv/output_${event_id}.csv`;
@@ -50,22 +45,26 @@ async function runPythonScripts(eventlists) {
           });
         });
         if (resCode !== 200) {
-          console.error("GetOne event RSM file failed ---------------" + resCode + "-----------------");
+          console.error("[API service] GetOne event RSM file failed ---------------" + resCode + "-----------------");
           reject(new Error("GetOne event RSM file failed"));
           return;
         }
         var res = {};
         if (Obj && Obj.length > 0) {
-          console.log("Obj length : "+Obj.length);
-          var rescode = rsm_to_dataverse(Obj, filepath);
-          console.log("--------------- rsm_to_dataverse return code : " + rescode);
-          if (rescode !== -1){
+          try {
+            rsm_to_dataverse(Obj, filepath);
             res['isValid'] = true;
-            console.log("res url and ent id : "+JSON.stringify(res));
-          } else {
+          }
+          catch (error){
+            console.log(`[API service] Geberate csv failed! Query condition : `+
+                        `{"data.mecEsn":${mecEsn}, "data.timestamp":`+
+                        `{$gte: ${start_time} = ${eventlists[i].create_time}, $lte: ${end_time} = ${eventlists[i].end_time}});`);
             res['isValid'] = false;
           }
         } else {
+          console.log(`[API service] No documents matching the criteria were found! Query condition : `+
+                      `{"data.mecEsn":${mecEsn}, "data.timestamp": `+
+                      `{$gte: ${start_time} = ${eventlists[i].create_time}, $lte: ${end_time} = ${eventlists[i].end_time}}`);
           res['isValid'] = false;
         }
         res['csvUrl'] = filepath;
