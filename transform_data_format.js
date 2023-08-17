@@ -143,6 +143,16 @@ function getParticipantCount(data) {
   return participantCount;
 }
 
+function sortArrayByPtcIdAndTimestamp(arr) {
+  const sortedArray = arr.sort((a, b) => {
+    if (a.ptcId === b.ptcId) {
+      return a['data.timestamp'] - b['data.timestamp'];
+    }
+    return a.ptcId - b.ptcId;
+  });
+  return sortedArray;
+}
+
 function extractParticipantData(data, participantCount, participantFields) {
 
   for (let i = 0; i < participantCount; i++) {
@@ -240,6 +250,7 @@ function rsm_to_dataverse(documents, outputFile){
     const participantCount = getParticipantCount(transformedData);
     var extractedData = extractParticipantData(transformedData, participantCount, csvFields);
   }
-  writeParticipantDataToCsv(extractedData, csvFields, outputFile);
+  const sortedParticipantData = sortArrayByPtcIdAndTimestamp(participantData);
+  writeParticipantDataToCsv(sortedParticipantData, csvFields, outputFile);
 }
 module.exports.rsm_to_dataverse = rsm_to_dataverse
