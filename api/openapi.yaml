@@ -4,7 +4,7 @@ info:
   description: This is a GICC Server based on the OpenAPI 3.0 specification
   version: 1.0.11
 servers:
-- url: http://localhost:8080
+- url: http://10.66.8.42:8080
 paths:
   /generateSceneData:
     post:
@@ -32,38 +32,48 @@ components:
       properties:
         startTime:
           type: string
-          format: date-time
+          # format: date-time
         endTime:
           type: string
-          format: date-time
+          # format: date-time
         eventlists:
           type: array
           items:
             $ref: '#/components/schemas/event_eventlists'
     response:
-      type: array
-      items:
-        $ref: '#/components/schemas/response_inner'
+      type: object
+      properties:
+        eventResultLists:
+          type: array
+          items:
+            $ref: '#/components/schemas/response_inner'
     event_eventlists:
       type: object
       properties:
-        sceneType:
+        id:
           type: integer
         type:
           type: integer
-        startTime:
+        trigger_time:
           type: string
-          format: date-time
-        endTime:
+          # format: date-time
+        create_time:
           type: string
-          format: date-time
+          # format: date-time
+        end_time:
+          type: string
+          # format: date-time
+        status:
+          type: integer
+        address:
+          type: string
         longitude:
-          type: integer
+          type: number
         latitude:
+          type: number
+        crossID:
           type: integer
-        vlicense:
-          type: string
-        vid:
+        esn:
           type: string
     response_inner:
       type: object
@@ -72,9 +82,12 @@ components:
           type: integer
         csvUrl:
           type: string
+        isValid:
+          type: boolean
       example:
         csvUrl: csvUrl
         evnetID: 0
+        isValid: true
   requestBodies:
     scene:
       content:

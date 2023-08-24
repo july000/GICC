@@ -1,12 +1,5 @@
 'use strict';
-
-const { spawn } = require('child_process');
-const { object } = require('joi');
-// const currentWorkingDirectory = process.cwd();
-// console.log(`Current working directory: ${currentWorkingDirectory}`);
-
-
-
+const {rsm_to_dataverse} = require('../transform_data_format')
 
 /**
  * generate csv files
@@ -16,68 +9,80 @@ const { object } = require('joi');
  **/
 
 exports.generateCSV = function(req, res, next, body) {
-  // return new Promise(function(resolve, reject, res) {
-
-    console.log("------ request body ------: ");
-    console.log("startTime: " + body.startTime);
-    console.log("endTime: " + body.endTime);
-    console.log("eventlists: " + body.eventlists);
-
-
-    const eventlists = body.eventlists;
-    runPythonScripts()
-      .then(resMsg => {
-        console.log("CSV generation successful.");
-        console.log(resMsg);
-        var results = {};
-        results['application/json'] = resMsg
-        // resolve(results[Object.keys(results)]); // Resolve the main promise with the result from runPythonScripts
-        
-        res.setHeader('Content-Type', 'application/json');
-        res.statusCode = 200;
-        res.end(JSON.stringify(results));
-      })
-      .catch(error => {
-        console.error("CSV generation failed.");
-        console.error(error);
-        // reject(error); // Reject the main promise with the error
-      });
-  // });
+  const eventlists = body.eventlists;
+  convert(eventlists)
+    .then(resMsg => {
+      var results = {};
+      results['eventResultLists'] = resMsg
+      
+      res.setHeader('Content-Type', 'application/json');
+      res.statusCode = 200;
+      res.end(JSON.stringify(results));
+    })
+    .catch(error => {
+      console.error(error);
+    });
 }
 
-async function runPythonScripts() {
-    var promises = [];
-    var resMsg = [];
+async function convert(eventlists) {
+  var promises = [];
+  var resEventMsg = [];
 
-    for (let i = 0; i < 5; i++) {
-      promises.push(new Promise((resolve, reject) => {
-        var filepath = `/data/csv/output_${i}.csv`;
-        var pythonProcess = spawn('python3', ['./test.py', '--start-time', 1690335629000, '--end-time', 1690339571000, '--output-file',  filepath]);
+  for (let i = 0; i < eventlists.length; i++) {
+    promises.push(new Promise(async (resolve, reject) => {
+      var event_id = eventlists[i].id;
+      var mecEsn = eventlists[i].esn;
+      // console.log("---- event_id : " + event_id);
+      // console.log("---- mecEsn : " + mecEsn);
+      var start_time = Date.parse(eventlists[i].create_time);
+      var end_time = Date.parse(eventlists[i].end_time);
+      var filepath = `/data/csv/output_${event_id}.csv`;
 
-        pythonProcess.stdout.on('data', (data) => {
-          console.log(data.toString().trim());
-          if (data.toString().trim() === 'Finished') {
-            var res = {};
-            res['csvUrl'] = filepath;
-            res['eventID'] = 0;
-            resMsg.push(res);
-            console.log("--------- add message to response" + resMsg);
-            resolve();
+      try {
+        const { resCode, resMsg, times, Obj } = await new Promise((resolve, reject) => {
+          Get('RSM_Event', {"data.mecEsn":mecEsn, "data.timestamp": {$gte: start_time, $lte: end_time}}, 0, function (resCode, resMsg, times, Obj) {
+            resolve({ resCode, resMsg, times, Obj });
+          });
+        });
+        if (resCode !== 200) {
+          console.error("[API service] GetOne event RSM file failed ---------------" + resCode + "-----------------");
+          reject(new Error("GetOne event RSM file failed"));
+          return;
+        }
+        var res = {};
+        if (Obj && Obj.length > 0) {
+          try {
+            rsm_to_dataverse(Obj, filepath);
+            res['isValid'] = true;
           }
-        });
+          catch (error){
+            console.log(`[API service] Geberate csv failed! Query condition : `+
+                        `{"data.mecEsn":${mecEsn}, "data.timestamp":`+
+                        `{$gte: ${start_time} = ${eventlists[i].create_time}, $lte: ${end_time} = ${eventlists[i].end_time}});`);
+            res['isValid'] = false;
+          }
+        } else {
+          console.log(`[API service] No documents matching the criteria were found! Query condition : `+
+                      `{"data.mecEsn":${mecEsn}, "data.timestamp": `+
+                      `{$gte: ${start_time} = ${eventlists[i].create_time}, $lte: ${end_time} = ${eventlists[i].end_time}}`);
+          res['isValid'] = false;
+        }
+        res['csvUrl'] = filepath;
+        res['eventID'] = event_id;
+        resolve(res)
+        resEventMsg.push(res);
+      } catch (error) {
+        console.error(error);
+        reject(error);
+      }
+    }));
+  }
 
-        pythonProcess.stderr.on('data', (data) => {
-          console.error(`Python stderr: ${data}`);
-          reject(data);
-        });
-
-        pythonProcess.on('close', (code) => {
-          console.log(`Python process exited with code ${code}`);
-        });
-      }));
-    }
-
-    
+  try {
     await Promise.all(promises);
-    return resMsg;
+    return resEventMsg;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
 }

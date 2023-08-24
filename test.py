@@ -31,9 +31,9 @@ STYLE_MAP = {"car":"vehicle", "mixed_truck":"vehicle", "truck":"vehicle", "coach
                 }
 COLOR_MAP = {0:'white',1:'gray',3:'yellow',4:'pink',5:'purple',6:'green',7:'blue',8:'red',9:'brown',10:'orange',11:'black'}
 
-def run(start_time, end_time, output_file):
+def run(mecEsn, start_time, end_time, output_file):
     # print("---------- start_time, end_time : ", type(start_time), end_time)
-    query = {'data.timestamp': {'$gte': int(start_time), '$lte': int(end_time)}}
+    query = {'data.mecEsn': mecEsn, 'data.timestamp': {'$gte': int(start_time), '$lte': int(end_time)}}
     documents = collection.find(query)
     data_frames = (pd.json_normalize(
                     document,
@@ -93,9 +93,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--start-time', dest='start_time')
     parser.add_argument('--end-time', dest='end_time')
+    parser.add_argument('--mecEsn', dest='mecEsn')
     parser.add_argument('--output-file', dest='output_file', default='F:\\renjunmei007\\05_code\\github\\gicc-rawdata-dump\\output\\202306291800\\rsm.csv')
     args = parser.parse_args()
-    run(args.start_time, args.end_time, args.output_file)
+    run(args.mecEsn, args.start_time, args.end_time, args.output_file)
 
 # if __name__ == '__main__':
 #     import sys
