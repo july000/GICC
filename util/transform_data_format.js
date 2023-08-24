@@ -11,10 +11,10 @@ var http = require("http");
 var oas3Tools = require("oas3-tools");
 var schedule = require("node-schedule");
 
-require("../src/common/db_operation").dbIni();
-// const getTrafficEvent = require("./common/Util").getTrafficEvent;
+require("./common/db_operation").dbIni();
+const getTrafficEvent = require("./common/Util").getTrafficEvent;
 
-// var serverPort = 8080;
+var serverPort = 8080;
 global.token = "";
 var participantData = [];
 
@@ -149,6 +149,16 @@ function getParticipantCount(data) {
 	return participantCount;
 }
 
+function sortArrayByPtcIdAndTimestamp(arr) {
+	const sortedArray = arr.sort((a, b) => {
+		if (a.ptcId === b.ptcId) {
+			return a["data.timestamp"] - b["data.timestamp"];
+		}
+		return a.ptcId - b.ptcId;
+	});
+	return sortedArray;
+}
+
 function extractParticipantData(data, participantCount, participantFields) {
 	for (let i = 0; i < participantCount; i++) {
 		const participantValues = {};
@@ -244,6 +254,7 @@ function writeDataToCsv(participantData, participantFields, outputPath) {
 	};
 
 	const csvWriterInstance = createCsvWriter(csvWriterOptions);
+
 	return csvWriterInstance.writeRecords(participantData);
 }
 
@@ -259,7 +270,7 @@ function rsm_to_dataverse(documents, outputFile) {
 			csvFields
 		);
 	}
-
-	writeParticipantDataToCsv(extractedData, csvFields, outputFile);
+	const sortedParticipantData = sortArrayByPtcIdAndTimestamp(participantData);
+	writeParticipantDataToCsv(sortedParticipantData, csvFields, outputFile);
 }
 module.exports.rsm_to_dataverse = rsm_to_dataverse;
