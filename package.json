@@ -43,7 +43,6 @@
     "websocket": "^1.0.34"
   },
   "devDependencies": {
-    "esm": "^3.2.25",
-    "ts-node": "^10.9.1"
+    "esm": "^3.2.25"
   }
 }

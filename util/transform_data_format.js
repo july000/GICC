@@ -11,8 +11,8 @@ var http = require("http");
 var oas3Tools = require("oas3-tools");
 var schedule = require("node-schedule");
 
-require("./common/db_operation").dbIni();
-const getTrafficEvent = require("./common/Util").getTrafficEvent;
+require("../src/common/db_operation").dbIni();
+const getTrafficEvent = require("../src/common/Util").getTrafficEvent;
 
 var serverPort = 8080;
 global.token = "";

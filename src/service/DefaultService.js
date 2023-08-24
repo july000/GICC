@@ -30,10 +30,10 @@ exports.convert = async function convert(eventlists) {
 							Get(
 								"RSM_Event",
 								{
-									"data.mecEsn": "440113GXX000200000046",
+									"data.mecEsn": mecEsn,
 									"data.timestamp": {
-										$gte: 1692611455775,
-										$lte: 1692611455775,
+										$gte: start_time,
+										$lte: end_time,
 									},
 								},
 								0,
