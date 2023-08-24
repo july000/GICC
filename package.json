@@ -1,11 +1,11 @@
 {
-  "name": "",
+  "name": "gicc-center",
   "version": "1.0.11",
   "description": "This is a GICC Server based on the OpenAPI 3.0 specification",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
     "prestart": "npm install",
-    "start": "node index.js"
+    "start": "nodemon -w src"
   },
   "keywords": [
     "swagger"
@@ -13,6 +13,7 @@
   "license": "Unlicense",
   "private": true,
   "dependencies": {
+    "body-parser": "^1.20.2",
     "connect": "^3.2.0",
     "coordtransform": "^2.1.2",
     "csv-parser": "^3.0.0",
@@ -20,20 +21,25 @@
     "dataframe-js": "^1.4.4",
     "degrees": "^0.0.2",
     "degrees-radians": "^1.0.3",
+    "express": "^4.18.2",
     "flat": "^5.0.2",
+    "fs-extra": "^11.1.1",
     "generic-promise-pool": "^1.2.2",
     "geodesy": "^2.4.0",
-    "joi": "^17.9.2",
     "js-yaml": "^3.3.0",
-    "json2csv": "^6.0.0-alpha.2",
     "jsonexport": "^3.2.0",
     "jsonpath": "^1.1.1",
     "math": "^0.0.3",
+    "mongodb": "^5.7.0",
     "mongoose": "^7.3.4",
     "node-schedule": "^2.1.1",
+    "nodemon": "^3.0.1",
     "oas3-tools": "^2.2.3",
+    "os": "^0.1.2",
     "radians-degrees": "^1.0.0",
+    "reflect-metadata": "^0.1.13",
     "request": "^2.88.2",
+    "typeorm": "^0.3.17",
     "websocket": "^1.0.34"
   },
   "devDependencies": {
