@@ -42,7 +42,9 @@ function MongoInit(projectName, proInfo, callback) {
 }
 
 function MongoConnect() {
-	const mongoDB = "mongodb://127.0.0.1:27017/" + global.projectName;
+	var mongodbIP = require("./IniConfig").mongodb("ip");
+	var mongodbPort = require("./IniConfig").mongodb("port");
+	const mongoDB = "mongodb://"+mongodbIP+":"+mongodbPort+"/" + global.projectName;
 	// mongoose.connect(mongoDB);
 	try {
 		mongoose.connect(mongoDB, {

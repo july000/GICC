@@ -8,7 +8,8 @@ var oas3Tools = require("oas3-tools");
 var express = require("express");
 var bodyParser = require("body-parser");
 
-var serverPort = 30088;
+var serverIP = require("./common/IniConfig").swigger("ip");
+var serverPort = parseInt(require("./common/IniConfig").swigger("port"));
 
 var convert = require("./service/DefaultService").convert;
 // swaggerRouter configuration
@@ -17,12 +18,6 @@ var options = {
 		controllers: path.join(__dirname, "./controllers"),
 	},
 };
-
-var expressAppConfig = oas3Tools.expressAppConfig(
-	path.join(__dirname, "api/openapi.yaml"),
-	options
-);
-// var app = expressAppConfig.getApp();
 
 var app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -68,12 +63,14 @@ app.post("/generateSceneData", function (req, res) {
 // Initialize the Swagger middleware
 http.createServer(app).listen(serverPort, function () {
 	console.log(
-		"Your server is listening on port %d (http://localhost:%d)",
+		"Your server is listening on port %d (http://%s:%d)",
 		serverPort,
+		serverIP,
 		serverPort
 	);
 	console.log(
-		"Swagger-ui is available on http://localhost:%d/docs",
+		"Swagger-ui is available on http://%s:%d/docs",
+		serverIP,
 		serverPort
 	);
 

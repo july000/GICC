@@ -2,67 +2,51 @@ var path = require("path");
 //从fes_server.ini读取配置
 var ini = require("./iniOperation").loadFileSync(path.join(__dirname, "Conf.ini"));
 
-exports.fesConfig = function(element){
-    //取得fes  Section
-    var fes = ini.getOrCreateSection("fes");
+exports.schedualTask = function(element){
+    //取得schedualTask  Section
+    var task = ini.getOrCreateSection("schedualTask");
+    switch (element){
+        case "deleteRSM":
+            return task.deleteRSM;
+        case "deleteRSM_Event":
+            return task.deleteRSM_Event;
+        default:
+            return task;
+    }
+};
+
+exports.csvPath = function(element){
+    //取得csvPath  Section
+    var csvPath = ini.getOrCreateSection("csvPath");
+    switch (element){
+        case "path":
+            return csvPath.path;
+        default:
+            return csvPath;
+    }
+};
+
+exports.swigger = function(element){
+    //取得swigger  Section
+    var swigger = ini.getOrCreateSection("swigger");
     switch (element){
         case "ip":
-            return fes.ip;
+            return swigger.ip;
         case "port":
-            return fes.port;
-        case "monitor":
-            return fes.monitor;
-        case "real_time":
-            return fes.real_time;
-        case "guid":
-            return fes.guid;
-        case "projectName":
-            return fes.projectName;
-        case "db":
-            return fes.db;
-        case "log":
-            return fes.log;
+            return swigger.port;
         default:
-            return fes;
+            return swigger;
     }
 };
 
-cloudConfig = function(element){
-    //取得cloud  Section
-    var cloud = ini.getOrCreateSection("cloud");
-    switch (element){
-        case "cloudIp":
-            return cloud.cloudIp;
-        default:
-            return cloud;
-    }
-};
-
-procmanConfig = function(element){
-    //取得procman  Section
-    var procman = ini.getOrCreateSection("procman");
-    switch (element){
-        case "ip":
-            return procman.ip;
-        case "port":
-            return procman.port;
-        default:
-            return procman;
-    }
-};
-
-dualConfig= function(element){
+exports.mongodb= function(element){
     //取得dual  Section
-    var dual = ini.getOrCreateSection("dual");
+    var mongodb = ini.getOrCreateSection("mongodb");
     switch (element){
-        case "use":
-            return dual.use;
-        case "local_port":
-            return dual.local_port;
-        case "remote_ip":
-            return dual.remote_ip;
-        case "remote_port":
-            return dual.remote_port;
+        case "ip":
+            return mongodb.ip;
+        case "port":
+            return mongodb.port;
         default:
             return dual;
     }

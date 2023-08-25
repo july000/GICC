@@ -6,7 +6,8 @@ const getTrafficEvent = require("../common/Util").getTrafficEvent;
 global.token = "";
 
 function scheduleDeleteRSM() {
-	var jobInstance = schedule.scheduleJob("*/5 * * * *", () => {
+	var scheduleTime = require("../common/IniConfig").schedualTask("deleteRSM");
+	var jobInstance = schedule.scheduleJob(scheduleTime, () => {
 		console.log(
 			"------------------------------------ scheduleDeleteRSM is running at " +
 				new Date()
@@ -118,7 +119,9 @@ function filterDataToRSMEvent(trafficEventList) {
 }
 
 function scheduleDeleteRSMEvent() {
-	var jobInstance = schedule.scheduleJob("0 0 0 1 * *", () => {
+	var scheduleTime = require("../common/IniConfig").schedualTask("deleteRSM_Event");
+
+	var jobInstance = schedule.scheduleJob(scheduleTime, () => {
 		console.log(
 			"------------------------------------ scheduleDeleteRSMEvent is running at " +
 				new Date()
